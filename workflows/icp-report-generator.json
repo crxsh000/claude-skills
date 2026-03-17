@@ -1,0 +1,1252 @@
+{
+  "name": "ICP Problem Cluster Report Generator",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Start Workflow",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {}
+    },
+    {
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Set Coach ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 300],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "assign-coach-id",
+              "name": "coach_id_to_process",
+              "type": "string",
+              "value": "COACH_001"
+            },
+            {
+              "id": "assign-override-notes",
+              "name": "override_run_notes",
+              "type": "string",
+              "value": ""
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Read Coaches Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [440, 300],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Coaches"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "coach_id",
+              "lookupValue": "={{ $json.coach_id_to_process }}"
+            }
+          ]
+        },
+        "combineFilters": "AND",
+        "options": {
+          "returnFirstMatch": true
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Check Coach Found",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [660, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-coach-exists",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              },
+              "leftValue": "={{ $json.coach_id }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0004-4000-8000-00000000000b",
+      "name": "Set Error - Coach Not Found",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 520],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-msg",
+              "name": "error_message",
+              "type": "string",
+              "value": "ERROR: No coach found matching coach_id_to_process. Check the Coaches tab and the Set Coach ID node value."
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Validate Doc URL",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [880, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-doc-url",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "leftValue": "={{ $json.doc_url }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0005-4000-8000-00000000000b",
+      "name": "Set Error - No Doc URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1100, 520],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-msg2",
+              "name": "error_message",
+              "type": "string",
+              "value": "ERROR: Coach found but doc_url is empty. Add the Google Doc URL to the Coaches sheet."
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Fetch Questionnaire Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ $node[\"Read Coaches Tab\"].json.doc_url }}",
+        "simple": true
+      }
+    },
+    {
+      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "name": "Normalize and Redact PII",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst coachData = $node[\"Read Coaches Tab\"].first().json;\nconst overrideNotes = $node[\"Set Coach ID\"].first().json.override_run_notes;\n\nfor (const item of items) {\n  let text = item.json.text || item.json.body || JSON.stringify(item.json);\n\n  // PII Redaction - Phone numbers\n  text = text.replace(/(\\+?1[-\\.\\s]?)?\\(?\\d{3}\\)?[-\\.\\s]?\\d{3}[-\\.\\s]?\\d{4}/g, '[PHONE REDACTED]');\n\n  // PII Redaction - Street addresses\n  text = text.replace(/\\d{1,5}\\s+[\\w\\s]{2,30}(?:Street|St|Avenue|Ave|Road|Rd|Boulevard|Blvd|Drive|Dr|Lane|Ln|Court|Ct|Way|Place|Pl)\\.?(?:\\s*,?\\s*(?:Apt|Suite|Ste|Unit|#)\\s*\\w+)?/gi, '[ADDRESS REDACTED]');\n\n  // Normalize multiple blank lines\n  text = text.replace(/\\n{3,}/g, '\\n\\n').trim();\n\n  item.json.cleaned_doc_content = text;\n  item.json.coach_id = coachData.coach_id;\n  item.json.coach_name = coachData.coach_name;\n  item.json.coach_email = coachData.coach_email || '';\n  item.json.doc_url = coachData.doc_url;\n  item.json.run_notes = overrideNotes || coachData.run_notes || '';\n}\n\nreturn items;"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0008-4000-8000-000000000008",
+      "name": "Read Cluster Library",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1540, 300],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Cluster_Library"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0009-4000-8000-000000000009",
+      "name": "Build Anthropic Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const docItem = $node[\"Normalize and Redact PII\"].first().json;\nconst clusterItems = $node[\"Read Cluster Library\"].all();\n\n// Build existing clusters summary\nconst existingClusters = clusterItems\n  .filter(item => item.json.canonical_cluster_name)\n  .map(item => ({\n    canonical_cluster_name: item.json.canonical_cluster_name || '',\n    definition: item.json.definition || '',\n    common_symptoms: item.json.common_symptoms || '',\n    times_seen: item.json.times_seen || 0\n  }));\n\nconst existingClustersText = existingClusters.length > 0\n  ? JSON.stringify(existingClusters, null, 2)\n  : 'No existing clusters yet. All clusters from this analysis will be new.';\n\nconst systemPrompt = `You are an expert ICP (Ideal Client Profile) analyst specializing in online fitness coaching businesses.\n\nYou analyze coach questionnaire responses to identify problem clusters, score the ICP, build a tier list, and provide messaging guidance.\n\nCRITICAL RULES:\n1. Return ONLY valid JSON. No markdown code fences, no explanation text outside JSON.\n2. Base problem clusters ONLY on the \"Prospect Complaints (Voice of Prospect)\" section.\n3. Generate exactly 2-3 problem clusters.\n4. All 5 ICP scoring factors MUST be filled (1-5 each). Emphasize Reachability, Willingness to Pay, and Urgency in writeups.\n5. overall_stars = simple average of the 5 factor scores, rounded to nearest 0.5.\n6. If required sections are weak or missing, set needs_followup=true and generate 8-12 follow-up questions.\n7. For Numbers section, use buckets to estimate LTV. If missing, estimate conservatively and label as estimate.\n8. Evidence quotes must be SHORT excerpts pulled directly from the document text.\n9. Content themes should be 5-10 themes. NO hooks, scripts, calendars, or DM scripts.\n10. Messaging dos/donts should be PRINCIPLES only, not copy.\n\nEXPECTED QUESTIONNAIRE HEADINGS (handle minor variations):\n- Coach Overview\n- Target Client\n- Prospect Complaints (Voice of Prospect)\n- Desired Outcomes\n- Objections\n- Offer\n- Proof\n- Acquisition\n- Numbers (Optional: price bucket, program length, capacity)\n\nNUMBERS BUCKETS:\n- Total program price bucket: <$300, $300-$750, $750-$1500, $1500+\n- Program length/retention bucket: 4w, 8w, 12w, 6mo, ongoing, unknown-estimate\n- Capacity bucket: <10, 10-20, 20-40, 40+, unknown-estimate\n\nLTV ESTIMATION:\n- LTV = program price x estimated retention cycles\n- If Numbers section is missing, mark estimated_ltv.value as \"unknown\" and assumptions as [\"Numbers section not provided\"]\n- Potential LTV score (1-5) should reflect expansion/continuity signals in the doc\n\nYour JSON response MUST conform to this EXACT schema (no extra fields, no missing fields):\n{\n  \"coach_id\": \"string\",\n  \"coach_name\": \"string\",\n  \"summary\": {\n    \"one_paragraph\": \"string\",\n    \"key_insights\": [\"string\", \"...\"]\n  },\n  \"problem_clusters\": [\n    {\n      \"cluster_name\": \"string (short, clear)\",\n      \"who_it_applies_to\": \"string\",\n      \"root_cause\": \"string\",\n      \"symptoms\": [\"string\", \"...\"],\n      \"why_they_fail_currently\": [\"string\", \"...\"],\n      \"what_they_want_instead\": [\"string\", \"...\"],\n      \"evidence_quotes\": [\"string (2-4 short excerpts from the doc)\"]\n    }\n  ],\n  \"icp_scoring\": {\n    \"overall_stars\": 1,\n    \"factors\": [\n      {\n        \"factor_name\": \"Reachability\",\n        \"score_1_to_5\": 1,\n        \"reasoning\": \"string (grounded in doc)\",\n        \"evidence_quotes\": [\"string (1-2)\"]\n      },\n      {\n        \"factor_name\": \"Willingness to Pay\",\n        \"score_1_to_5\": 1,\n        \"reasoning\": \"string\",\n        \"evidence_quotes\": [\"string\"]\n      },\n      {\n        \"factor_name\": \"Urgency / Pain Intensity\",\n        \"score_1_to_5\": 1,\n        \"reasoning\": \"string\",\n        \"evidence_quotes\": [\"string\"]\n      },\n      {\n        \"factor_name\": \"Retention Potential\",\n        \"score_1_to_5\": 1,\n        \"reasoning\": \"string\",\n        \"evidence_quotes\": [\"string\"]\n      },\n      {\n        \"factor_name\": \"Competition / Differentiation Difficulty\",\n        \"score_1_to_5\": 1,\n        \"reasoning\": \"string\",\n        \"evidence_quotes\": [\"string\"]\n      }\n    ]\n  },\n  \"tier_list\": [\n    {\n      \"segment_or_cluster\": \"string\",\n      \"stars_1_to_5\": 1,\n      \"reachability_notes\": \"string\",\n      \"willingness_to_pay_notes\": \"string\",\n      \"urgency_notes\": \"string\",\n      \"estimated_ltv\": {\n        \"value\": \"string (dollar amount or unknown)\",\n        \"assumptions\": [\"string\"]\n      },\n      \"potential_ltv_score_1_to_5\": 1,\n      \"potential_ltv_rationale\": \"string\"\n    }\n  ],\n  \"messaging_guidance\": {\n    \"dos\": [\"string (principles only)\", \"...\"],\n    \"donts\": [\"string (principles only)\", \"...\"],\n    \"objections_to_address\": [\n      {\n        \"objection\": \"string\",\n        \"principled_response\": \"string\"\n      }\n    ],\n    \"content_themes\": [\"string (5-10 themes, NO hooks/scripts)\"]\n  },\n  \"followup_questions\": [\"string (8-12 if needed, empty array if not)\"],\n  \"needs_followup\": false\n}`;\n\nconst userPrompt = `Analyze the following fitness coach questionnaire and produce the complete ICP analysis.\n\nCOACH ID: ${docItem.coach_id}\nCOACH NAME: ${docItem.coach_name}\nRUN NOTES: ${docItem.run_notes || 'None'}\n\n=== QUESTIONNAIRE CONTENT ===\n${docItem.cleaned_doc_content}\n=== END QUESTIONNAIRE ===\n\n=== EXISTING CLUSTER LIBRARY (for matching - use lowercase normalization) ===\n${existingClustersText}\n=== END CLUSTER LIBRARY ===\n\nReturn ONLY the JSON object. No other text.`;\n\nconst requestBody = {\n  model: \"claude-sonnet-4-20250514\",\n  max_tokens: 8192,\n  system: systemPrompt,\n  messages: [\n    {\n      role: \"user\",\n      content: userPrompt\n    }\n  ]\n};\n\nreturn [{\n  json: {\n    requestBody: requestBody,\n    coach_id: docItem.coach_id,\n    coach_name: docItem.coach_name,\n    coach_email: docItem.coach_email,\n    doc_url: docItem.doc_url,\n    run_notes: docItem.run_notes,\n    cleaned_doc_content: docItem.cleaned_doc_content\n  }\n}];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0010-4000-8000-000000000010",
+      "name": "Call Anthropic API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "none",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.requestBody) }}",
+        "sendHeaders": true,
+        "specifyHeaders": "keypair",
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "continueOnFail": true
+    },
+    {
+      "id": "a1b2c3d4-0011-4000-8000-000000000011",
+      "name": "Parse LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst promptData = $node[\"Build Anthropic Prompt\"].first().json;\n\nfor (const item of items) {\n  // Check if the API call failed\n  if (item.json.error || (!item.json.content && !item.json.id)) {\n    item.json.llm_error = true;\n    item.json.error_message = item.json.error?.message || item.json.message || 'No content in API response';\n    item.json.status = 'ERROR';\n    item.json.coach_id = promptData.coach_id;\n    item.json.coach_name = promptData.coach_name;\n    continue;\n  }\n\n  // Extract text content from Anthropic response\n  let rawText = '';\n  if (Array.isArray(item.json.content)) {\n    rawText = item.json.content\n      .filter(block => block.type === 'text')\n      .map(block => block.text)\n      .join('');\n  } else if (typeof item.json.content === 'string') {\n    rawText = item.json.content;\n  }\n\n  // Strip accidental markdown code fences\n  rawText = rawText.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/i, '').trim();\n\n  // Parse JSON\n  let analysis;\n  try {\n    analysis = JSON.parse(rawText);\n  } catch (e) {\n    item.json.llm_error = true;\n    item.json.error_message = `JSON parse error: ${e.message}. Raw response starts with: ${rawText.substring(0, 300)}`;\n    item.json.status = 'ERROR';\n    item.json.coach_id = promptData.coach_id;\n    item.json.coach_name = promptData.coach_name;\n    continue;\n  }\n\n  // Validate required top-level fields\n  const requiredFields = ['problem_clusters', 'icp_scoring', 'tier_list', 'messaging_guidance'];\n  const missingFields = requiredFields.filter(f => !analysis[f]);\n  if (missingFields.length > 0) {\n    item.json.llm_error = true;\n    item.json.error_message = `Missing required fields in LLM response: ${missingFields.join(', ')}`;\n    item.json.status = 'ERROR';\n    item.json.coach_id = promptData.coach_id;\n    item.json.coach_name = promptData.coach_name;\n    continue;\n  }\n\n  if (!Array.isArray(analysis.problem_clusters) || analysis.problem_clusters.length === 0) {\n    item.json.llm_error = true;\n    item.json.error_message = 'problem_clusters must be a non-empty array';\n    item.json.status = 'ERROR';\n    item.json.coach_id = promptData.coach_id;\n    item.json.coach_name = promptData.coach_name;\n    continue;\n  }\n\n  // Success\n  item.json.analysis = analysis;\n  item.json.llm_error = false;\n  item.json.coach_id = promptData.coach_id;\n  item.json.coach_name = promptData.coach_name;\n  item.json.coach_email = promptData.coach_email;\n  item.json.doc_url = promptData.doc_url;\n  item.json.run_notes = promptData.run_notes;\n  item.json.needs_followup = analysis.needs_followup === true;\n  item.json.status = analysis.needs_followup === true ? 'NEEDS_FOLLOWUP' : 'DONE';\n}\n\nreturn items;"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0011-4000-8000-00000000011b",
+      "name": "Check LLM Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [2420, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-no-error",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "leftValue": "={{ $json.llm_error }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0012-4000-8000-000000000012",
+      "name": "Render Internal Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2640, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst now = new Date();\nconst dateStr = now.toISOString().split('T')[0];\nconst timeStr = now.toISOString().substring(11, 16).replace(':', '');\nconst timestamp = `${dateStr} ${timeStr}`;\n\nfor (const item of items) {\n  const a = item.json.analysis;\n  const s = a.summary || {};\n  let r = '';\n\n  // ===== HEADER =====\n  r += '════════════════════════════════════════════════════════\\n';\n  r += 'INTERNAL ICP PROBLEM CLUSTER REPORT\\n';\n  r += '════════════════════════════════════════════════════════\\n\\n';\n  r += `Coach: ${a.coach_name || item.json.coach_name} (${a.coach_id || item.json.coach_id})\\n`;\n  r += `Generated: ${timestamp}\\n`;\n  r += `Status: ${item.json.status}\\n`;\n  r += `Overall ICP Score: ${a.icp_scoring.overall_stars}/5 stars\\n\\n`;\n\n  // ===== EXECUTIVE SUMMARY =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'EXECUTIVE SUMMARY\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  r += `${s.one_paragraph || 'N/A'}\\n\\n`;\n  if (s.key_insights && s.key_insights.length > 0) {\n    r += 'Key Insights:\\n';\n    s.key_insights.forEach(insight => {\n      r += `  • ${insight}\\n`;\n    });\n    r += '\\n';\n  }\n\n  // ===== PROBLEM CLUSTERS =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += `PROBLEM CLUSTERS (${a.problem_clusters.length} identified)\\n`;\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  a.problem_clusters.forEach((cluster, i) => {\n    r += `▶ CLUSTER ${i + 1}: ${cluster.cluster_name}\\n`;\n    r += `  Who it applies to: ${cluster.who_it_applies_to}\\n`;\n    r += `  Root cause: ${cluster.root_cause}\\n\\n`;\n    if (cluster.symptoms && cluster.symptoms.length > 0) {\n      r += '  Symptoms:\\n';\n      cluster.symptoms.forEach(s => { r += `    - ${s}\\n`; });\n      r += '\\n';\n    }\n    if (cluster.why_they_fail_currently && cluster.why_they_fail_currently.length > 0) {\n      r += '  Why they fail currently:\\n';\n      cluster.why_they_fail_currently.forEach(f => { r += `    - ${f}\\n`; });\n      r += '\\n';\n    }\n    if (cluster.what_they_want_instead && cluster.what_they_want_instead.length > 0) {\n      r += '  What they want instead:\\n';\n      cluster.what_they_want_instead.forEach(w => { r += `    - ${w}\\n`; });\n      r += '\\n';\n    }\n    if (cluster.evidence_quotes && cluster.evidence_quotes.length > 0) {\n      r += '  Evidence quotes:\\n';\n      cluster.evidence_quotes.forEach(q => { r += `    \"${q}\"\\n`; });\n      r += '\\n';\n    }\n    r += '\\n';\n  });\n\n  // ===== ICP SCORING =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'ICP SCORING (5-Factor Analysis)\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  r += `Overall Stars: ${'★'.repeat(Math.round(a.icp_scoring.overall_stars))}${'☆'.repeat(5 - Math.round(a.icp_scoring.overall_stars))} (${a.icp_scoring.overall_stars}/5)\\n\\n`;\n  if (a.icp_scoring.factors && a.icp_scoring.factors.length > 0) {\n    a.icp_scoring.factors.forEach(factor => {\n      const emphasis = ['Reachability', 'Willingness to Pay', 'Urgency / Pain Intensity'].includes(factor.factor_name) ? ' ⬅ KEY FACTOR' : '';\n      r += `  ${factor.factor_name}: ${factor.score_1_to_5}/5${emphasis}\\n`;\n      r += `    Reasoning: ${factor.reasoning}\\n`;\n      if (factor.evidence_quotes && factor.evidence_quotes.length > 0) {\n        factor.evidence_quotes.forEach(q => { r += `    Evidence: \"${q}\"\\n`; });\n      }\n      r += '\\n';\n    });\n  }\n\n  // ===== TIER LIST =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'ICP TIER LIST\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  if (a.tier_list && a.tier_list.length > 0) {\n    a.tier_list.forEach((tier, i) => {\n      r += `  ${i + 1}. ${tier.segment_or_cluster} — ${'★'.repeat(tier.stars_1_to_5)}${'☆'.repeat(5 - tier.stars_1_to_5)}\\n`;\n      r += `     Reachability: ${tier.reachability_notes}\\n`;\n      r += `     Willingness to Pay: ${tier.willingness_to_pay_notes}\\n`;\n      r += `     Urgency: ${tier.urgency_notes}\\n`;\n      r += `     Estimated LTV: ${tier.estimated_ltv?.value || 'unknown'}\\n`;\n      if (tier.estimated_ltv?.assumptions && tier.estimated_ltv.assumptions.length > 0) {\n        r += `     LTV Assumptions: ${tier.estimated_ltv.assumptions.join('; ')}\\n`;\n      }\n      r += `     Potential LTV Score: ${tier.potential_ltv_score_1_to_5}/5\\n`;\n      r += `     Potential LTV Rationale: ${tier.potential_ltv_rationale}\\n\\n`;\n    });\n  }\n\n  // ===== MESSAGING GUIDANCE =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'MESSAGING GUIDANCE\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  const mg = a.messaging_guidance || {};\n  if (mg.dos && mg.dos.length > 0) {\n    r += '  DO:\\n';\n    mg.dos.forEach(d => { r += `    ✓ ${d}\\n`; });\n    r += '\\n';\n  }\n  if (mg.donts && mg.donts.length > 0) {\n    r += '  DON\\'T:\\n';\n    mg.donts.forEach(d => { r += `    ✗ ${d}\\n`; });\n    r += '\\n';\n  }\n  if (mg.objections_to_address && mg.objections_to_address.length > 0) {\n    r += '  OBJECTIONS TO ADDRESS:\\n';\n    mg.objections_to_address.forEach(obj => {\n      r += `    Objection: \"${obj.objection}\"\\n`;\n      r += `    Principled Response: ${obj.principled_response}\\n\\n`;\n    });\n  }\n  if (mg.content_themes && mg.content_themes.length > 0) {\n    r += '  CONTENT THEMES:\\n';\n    mg.content_themes.forEach((t, i) => { r += `    ${i + 1}. ${t}\\n`; });\n    r += '\\n';\n  }\n\n  // ===== VIDEO TALKING POINTS =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'VIDEO TALKING POINTS\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  r += `  • This coach targets: ${a.problem_clusters[0]?.who_it_applies_to || 'See clusters above'}\\n`;\n  r += `  • Top cluster: \"${a.problem_clusters[0]?.cluster_name || 'N/A'}\" — ${a.problem_clusters[0]?.root_cause || ''}\\n`;\n  r += `  • ICP overall score: ${a.icp_scoring.overall_stars}/5\\n`;\n  const topFactors = (a.icp_scoring.factors || []).filter(f => ['Reachability', 'Willingness to Pay', 'Urgency / Pain Intensity'].includes(f.factor_name));\n  topFactors.forEach(f => {\n    r += `  • ${f.factor_name}: ${f.score_1_to_5}/5 — ${f.reasoning.substring(0, 100)}...\\n`;\n  });\n  if (a.tier_list && a.tier_list.length > 0) {\n    r += `  • Best segment: ${a.tier_list[0].segment_or_cluster} (${a.tier_list[0].stars_1_to_5} stars)\\n`;\n  }\n  r += `  • Key messaging themes: ${(mg.content_themes || []).slice(0, 3).join(', ')}\\n`;\n  r += '\\n';\n\n  // ===== FOLLOW-UP QUESTIONS =====\n  if (a.followup_questions && a.followup_questions.length > 0) {\n    r += '────────────────────────────────────────────────────────\\n';\n    r += 'FOLLOW-UP QUESTIONS\\n';\n    r += '────────────────────────────────────────────────────────\\n\\n';\n    a.followup_questions.forEach((q, i) => {\n      r += `  ${i + 1}. ${q}\\n`;\n    });\n    r += '\\n';\n  }\n\n  r += '════════════════════════════════════════════════════════\\n';\n  r += 'END OF INTERNAL REPORT\\n';\n  r += '════════════════════════════════════════════════════════\\n';\n\n  item.json.internal_report_text = r;\n  item.json.report_timestamp = timestamp;\n}\n\nreturn items;"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0013-4000-8000-000000000013",
+      "name": "Render Coach Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\n\nfor (const item of items) {\n  const a = item.json.analysis;\n  const s = a.summary || {};\n  const timestamp = item.json.report_timestamp;\n  let r = '';\n\n  // ===== HEADER =====\n  r += '════════════════════════════════════════════════════════\\n';\n  r += 'YOUR ICP PROBLEM CLUSTER REPORT\\n';\n  r += '════════════════════════════════════════════════════════\\n\\n';\n  r += `Prepared for: ${a.coach_name || item.json.coach_name}\\n`;\n  r += `Date: ${timestamp}\\n`;\n  r += `Overall ICP Score: ${'★'.repeat(Math.round(a.icp_scoring.overall_stars))}${'☆'.repeat(5 - Math.round(a.icp_scoring.overall_stars))} (${a.icp_scoring.overall_stars}/5)\\n\\n`;\n\n  // ===== KEY INSIGHTS =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'KEY INSIGHTS SUMMARY\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  r += `${s.one_paragraph || 'N/A'}\\n\\n`;\n  if (s.key_insights && s.key_insights.length > 0) {\n    s.key_insights.forEach(insight => {\n      r += `  • ${insight}\\n`;\n    });\n    r += '\\n';\n  }\n\n  // ===== PROBLEM CLUSTERS =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'YOUR CLIENT PROBLEM CLUSTERS\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  r += 'These are the core problem patterns we identified in how your prospects describe their challenges:\\n\\n';\n  a.problem_clusters.forEach((cluster, i) => {\n    r += `▶ CLUSTER ${i + 1}: ${cluster.cluster_name}\\n\\n`;\n    r += `  Who this applies to: ${cluster.who_it_applies_to}\\n`;\n    r += `  Root cause: ${cluster.root_cause}\\n\\n`;\n    if (cluster.symptoms && cluster.symptoms.length > 0) {\n      r += '  What they experience:\\n';\n      cluster.symptoms.forEach(s => { r += `    - ${s}\\n`; });\n      r += '\\n';\n    }\n    if (cluster.why_they_fail_currently && cluster.why_they_fail_currently.length > 0) {\n      r += '  Why current solutions fail them:\\n';\n      cluster.why_they_fail_currently.forEach(f => { r += `    - ${f}\\n`; });\n      r += '\\n';\n    }\n    if (cluster.what_they_want_instead && cluster.what_they_want_instead.length > 0) {\n      r += '  What they actually want:\\n';\n      cluster.what_they_want_instead.forEach(w => { r += `    - ${w}\\n`; });\n      r += '\\n';\n    }\n    if (cluster.evidence_quotes && cluster.evidence_quotes.length > 0) {\n      r += '  From your questionnaire:\\n';\n      cluster.evidence_quotes.forEach(q => { r += `    \"${q}\"\\n`; });\n      r += '\\n';\n    }\n    r += '\\n';\n  });\n\n  // ===== ICP SCORING =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'YOUR ICP SCORE BREAKDOWN\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  r += `Overall: ${'★'.repeat(Math.round(a.icp_scoring.overall_stars))}${'☆'.repeat(5 - Math.round(a.icp_scoring.overall_stars))} (${a.icp_scoring.overall_stars}/5)\\n\\n`;\n  if (a.icp_scoring.factors && a.icp_scoring.factors.length > 0) {\n    a.icp_scoring.factors.forEach(factor => {\n      r += `  ${factor.factor_name}: ${'★'.repeat(factor.score_1_to_5)}${'☆'.repeat(5 - factor.score_1_to_5)} (${factor.score_1_to_5}/5)\\n`;\n      r += `    ${factor.reasoning}\\n\\n`;\n    });\n  }\n\n  // ===== RECOMMENDED BEST-FIT =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'RECOMMENDED BEST-FIT SEGMENT\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  if (a.tier_list && a.tier_list.length > 0) {\n    const best = a.tier_list.reduce((a, b) => a.stars_1_to_5 >= b.stars_1_to_5 ? a : b);\n    r += `  Recommended: ${best.segment_or_cluster} (${'★'.repeat(best.stars_1_to_5)} ${best.stars_1_to_5}/5)\\n\\n`;\n    r += `  Why this segment:\\n`;\n    r += `    - Reachability: ${best.reachability_notes}\\n`;\n    r += `    - Willingness to Pay: ${best.willingness_to_pay_notes}\\n`;\n    r += `    - Urgency: ${best.urgency_notes}\\n\\n`;\n    r += '  Full tier comparison:\\n';\n    a.tier_list.forEach((tier, i) => {\n      r += `    ${i + 1}. ${tier.segment_or_cluster} — ${'★'.repeat(tier.stars_1_to_5)} (${tier.stars_1_to_5}/5)\\n`;\n    });\n    r += '\\n';\n  }\n\n  // ===== MESSAGING DO'S/DON'TS =====\n  r += '────────────────────────────────────────────────────────\\n';\n  r += 'MESSAGING PRINCIPLES\\n';\n  r += '────────────────────────────────────────────────────────\\n\\n';\n  const mg = a.messaging_guidance || {};\n  if (mg.dos && mg.dos.length > 0) {\n    r += '  DO:\\n';\n    mg.dos.forEach(d => { r += `    ✓ ${d}\\n`; });\n    r += '\\n';\n  }\n  if (mg.donts && mg.donts.length > 0) {\n    r += '  DON\\'T:\\n';\n    mg.donts.forEach(d => { r += `    ✗ ${d}\\n`; });\n    r += '\\n';\n  }\n\n  // ===== CONTENT THEMES =====\n  if (mg.content_themes && mg.content_themes.length > 0) {\n    r += '────────────────────────────────────────────────────────\\n';\n    r += 'CONTENT THEMES\\n';\n    r += '────────────────────────────────────────────────────────\\n\\n';\n    r += 'These are themes you can build content around (no scripts — just directions):\\n\\n';\n    mg.content_themes.forEach((t, i) => { r += `  ${i + 1}. ${t}\\n`; });\n    r += '\\n';\n  }\n\n  // ===== FOLLOW-UP QUESTIONS =====\n  if (a.followup_questions && a.followup_questions.length > 0) {\n    r += '────────────────────────────────────────────────────────\\n';\n    r += 'FOLLOW-UP QUESTIONS\\n';\n    r += '────────────────────────────────────────────────────────\\n\\n';\n    r += 'To strengthen our analysis, please consider addressing these:\\n\\n';\n    a.followup_questions.forEach((q, i) => {\n      r += `  ${i + 1}. ${q}\\n`;\n    });\n    r += '\\n';\n  }\n\n  r += '════════════════════════════════════════════════════════\\n';\n  r += 'END OF REPORT\\n';\n  r += '════════════════════════════════════════════════════════\\n';\n\n  item.json.coach_report_text = r;\n}\n\nreturn items;"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0014-4000-8000-000000000014",
+      "name": "Search ICP Reports Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [3080, 300],
+      "parameters": {
+        "resource": "fileFolder",
+        "operation": "search",
+        "queryString": "name = 'ICP Reports' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0015-4000-8000-000000000015",
+      "name": "Check Root Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [3300, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-root-folder",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              },
+              "leftValue": "={{ $json.id }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0016-4000-8000-000000000016",
+      "name": "Create ICP Reports Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [3520, 500],
+      "parameters": {
+        "resource": "folder",
+        "operation": "create",
+        "name": "ICP Reports",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0016-4000-8000-00000000016b",
+      "name": "Prepare Root Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3520, 300],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-root-id",
+              "name": "root_folder_id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0016-4000-8000-00000000016c",
+      "name": "Merge Root Folder ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3740, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst reportData = $node[\"Render Coach Report\"].first().json;\n\n// Get folder ID from whichever branch ran\nconst rootFolderId = items[0].json.root_folder_id || items[0].json.id;\n\nreturn [{\n  json: {\n    ...reportData,\n    root_folder_id: rootFolderId\n  }\n}];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0017-4000-8000-000000000017",
+      "name": "Search Coach Subfolder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [3960, 300],
+      "parameters": {
+        "resource": "fileFolder",
+        "operation": "search",
+        "queryString": "=name = '{{ $json.coach_id }} - {{ $json.coach_name }}' and mimeType = 'application/vnd.google-apps.folder' and '{{ $json.root_folder_id }}' in parents and trashed = false",
+        "returnAll": false,
+        "limit": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0018-4000-8000-000000000018",
+      "name": "Check Coach Subfolder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [4180, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "cond-coach-folder",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              },
+              "leftValue": "={{ $json.id }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0019-4000-8000-000000000019",
+      "name": "Create Coach Subfolder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [4400, 500],
+      "parameters": {
+        "resource": "folder",
+        "operation": "create",
+        "name": "={{ $node[\"Merge Root Folder ID\"].json.coach_id }} - {{ $node[\"Merge Root Folder ID\"].json.coach_name }}",
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $node[\"Merge Root Folder ID\"].json.root_folder_id }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0019-4000-8000-00000000019b",
+      "name": "Prepare Coach Folder ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [4400, 300],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-coach-folder-id",
+              "name": "coach_folder_id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0019-4000-8000-00000000019c",
+      "name": "Merge Coach Folder ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4620, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst mergedData = $node[\"Merge Root Folder ID\"].first().json;\n\n// Get coach folder ID from whichever branch ran\nconst coachFolderId = items[0].json.coach_folder_id || items[0].json.id;\n\nreturn [{\n  json: {\n    ...mergedData,\n    coach_folder_id: coachFolderId\n  }\n}];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0020-4000-8000-000000000020",
+      "name": "Create Internal Report Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [4840, 300],
+      "parameters": {
+        "operation": "create",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "myDrive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.coach_folder_id }}"
+        },
+        "title": "=Internal ICP Report - {{ $json.coach_name }} - {{ $now.toFormat('yyyy-MM-dd HHmm') }}"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0021-4000-8000-000000000021",
+      "name": "Insert Internal Report Text",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [5060, 300],
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.documentId }}",
+        "simple": true,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "object": "text",
+              "action": "insert",
+              "insertSegment": "body",
+              "locationChoice": "endOfSegmentLocation",
+              "text": "={{ $node[\"Merge Coach Folder ID\"].json.internal_report_text }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0022-4000-8000-000000000022",
+      "name": "Create Coach Report Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [5280, 300],
+      "parameters": {
+        "operation": "create",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "myDrive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $node[\"Merge Coach Folder ID\"].json.coach_folder_id }}"
+        },
+        "title": "=Coach ICP Report - {{ $node[\"Merge Coach Folder ID\"].json.coach_name }} - {{ $now.toFormat('yyyy-MM-dd HHmm') }}"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0023-4000-8000-000000000023",
+      "name": "Insert Coach Report Text",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [5500, 300],
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.documentId }}",
+        "simple": true,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "object": "text",
+              "action": "insert",
+              "insertSegment": "body",
+              "locationChoice": "endOfSegmentLocation",
+              "text": "={{ $node[\"Merge Coach Folder ID\"].json.coach_report_text }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0024-4000-8000-000000000024",
+      "name": "Build Sheet Update Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5720, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const mergedData = $node[\"Merge Coach Folder ID\"].first().json;\nconst internalDocId = $node[\"Create Internal Report Doc\"].first().json.documentId;\nconst coachDocId = $node[\"Create Coach Report Doc\"].first().json.documentId;\n\nconst internalReportUrl = `https://docs.google.com/document/d/${internalDocId}/edit`;\nconst coachReportUrl = `https://docs.google.com/document/d/${coachDocId}/edit`;\n\nreturn [{\n  json: {\n    coach_id: mergedData.coach_id,\n    coach_name: mergedData.coach_name,\n    internal_report_url: internalReportUrl,\n    coach_report_url: coachReportUrl,\n    timestamp_last_run: new Date().toISOString(),\n    status: mergedData.status,\n    analysis: mergedData.analysis\n  }\n}];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0025-4000-8000-000000000025",
+      "name": "Update Coaches Tab",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [5940, 300],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Coaches"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "coach_id": "={{ $json.coach_id }}",
+            "internal_report_url": "={{ $json.internal_report_url }}",
+            "coach_report_url": "={{ $json.coach_report_url }}",
+            "timestamp_last_run": "={{ $json.timestamp_last_run }}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": ["coach_id"],
+          "schema": [
+            {"id": "coach_id", "type": "string", "display": true, "removed": false, "required": false, "displayName": "coach_id", "defaultMatch": true, "canBeUsedToMatch": true},
+            {"id": "internal_report_url", "type": "string", "display": true, "removed": false, "required": false, "displayName": "internal_report_url", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "coach_report_url", "type": "string", "display": true, "removed": false, "required": false, "displayName": "coach_report_url", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "timestamp_last_run", "type": "string", "display": true, "removed": false, "required": false, "displayName": "timestamp_last_run", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "status", "type": "string", "display": true, "removed": false, "required": false, "displayName": "status", "defaultMatch": false, "canBeUsedToMatch": false}
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0026-4000-8000-000000000026",
+      "name": "Process Cluster Library Updates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [6160, 300],
+      "parameters": {
+        "language": "javaScript",
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst analysis = items[0].json.analysis;\nconst existingClusters = $node[\"Read Cluster Library\"].all().map(i => i.json);\nconst now = new Date().toISOString();\n\nconst normalize = (name) => (name || '').toLowerCase().replace(/[^a-z0-9\\s]/g, '').trim();\n\nconst outputItems = [];\n\nfor (const cluster of (analysis.problem_clusters || [])) {\n  const normalizedName = normalize(cluster.cluster_name);\n\n  // Try to match existing\n  const match = existingClusters.find(existing => {\n    const existingNorm = normalize(existing.canonical_cluster_name);\n    return existingNorm === normalizedName || existingNorm.includes(normalizedName) || normalizedName.includes(existingNorm);\n  });\n\n  if (match) {\n    // Update existing: increment times_seen\n    outputItems.push({\n      json: {\n        canonical_cluster_name: match.canonical_cluster_name,\n        definition: match.definition,\n        common_symptoms: match.common_symptoms,\n        typical_objections: match.typical_objections,\n        created_at: match.created_at,\n        times_seen: (parseInt(match.times_seen) || 0) + 1\n      }\n    });\n  } else {\n    // New cluster\n    const symptoms = (cluster.symptoms || []).join(', ');\n    const objections = (analysis.messaging_guidance?.objections_to_address || [])\n      .map(o => o.objection).join(', ');\n\n    outputItems.push({\n      json: {\n        canonical_cluster_name: cluster.cluster_name,\n        definition: cluster.root_cause || '',\n        common_symptoms: symptoms,\n        typical_objections: objections,\n        created_at: now,\n        times_seen: 1\n      }\n    });\n  }\n}\n\nreturn outputItems.length > 0 ? outputItems : [{ json: { _skip: true } }];"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0027-4000-8000-000000000027",
+      "name": "Update Cluster Library",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [6380, 300],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Cluster_Library"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "canonical_cluster_name": "={{ $json.canonical_cluster_name }}",
+            "definition": "={{ $json.definition }}",
+            "common_symptoms": "={{ $json.common_symptoms }}",
+            "typical_objections": "={{ $json.typical_objections }}",
+            "created_at": "={{ $json.created_at }}",
+            "times_seen": "={{ $json.times_seen }}"
+          },
+          "matchingColumns": ["canonical_cluster_name"],
+          "schema": [
+            {"id": "canonical_cluster_name", "type": "string", "display": true, "removed": false, "required": false, "displayName": "canonical_cluster_name", "defaultMatch": true, "canBeUsedToMatch": true},
+            {"id": "definition", "type": "string", "display": true, "removed": false, "required": false, "displayName": "definition", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "common_symptoms", "type": "string", "display": true, "removed": false, "required": false, "displayName": "common_symptoms", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "typical_objections", "type": "string", "display": true, "removed": false, "required": false, "displayName": "typical_objections", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "created_at", "type": "string", "display": true, "removed": false, "required": false, "displayName": "created_at", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "times_seen", "type": "string", "display": true, "removed": false, "required": false, "displayName": "times_seen", "defaultMatch": false, "canBeUsedToMatch": false}
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-00e1-4000-8000-0000000000e1",
+      "name": "Set Error Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2640, 520],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "err-status",
+              "name": "status",
+              "type": "string",
+              "value": "ERROR"
+            },
+            {
+              "id": "err-ts",
+              "name": "timestamp_last_run",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "err-coach-id",
+              "name": "coach_id",
+              "type": "string",
+              "value": "={{ $json.coach_id }}"
+            },
+            {
+              "id": "err-msg-detail",
+              "name": "error_detail",
+              "type": "string",
+              "value": "={{ $json.error_message }}"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-00e2-4000-8000-0000000000e2",
+      "name": "Write Error to Coaches Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [2860, 520],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Coaches"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "coach_id": "={{ $json.coach_id }}",
+            "status": "={{ $json.status }}",
+            "timestamp_last_run": "={{ $json.timestamp_last_run }}"
+          },
+          "matchingColumns": ["coach_id"],
+          "schema": [
+            {"id": "coach_id", "type": "string", "display": true, "removed": false, "required": false, "displayName": "coach_id", "defaultMatch": true, "canBeUsedToMatch": true},
+            {"id": "status", "type": "string", "display": true, "removed": false, "required": false, "displayName": "status", "defaultMatch": false, "canBeUsedToMatch": false},
+            {"id": "timestamp_last_run", "type": "string", "display": true, "removed": false, "required": false, "displayName": "timestamp_last_run", "defaultMatch": false, "canBeUsedToMatch": false}
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-00s1-4000-8000-0000000000s1",
+      "name": "📋 Phase 1: Input & Lookup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, 100],
+      "parameters": {
+        "content": "## Phase 1: Input & Lookup\n\n**Set Coach ID** → Edit `coach_id_to_process` before each run.\n\nReads the Coaches tab, validates the coach exists and has a doc_url.\n\nIf coach not found or doc_url missing, the workflow stops with a descriptive error.",
+        "width": 900,
+        "height": 160,
+        "color": 4
+      }
+    },
+    {
+      "id": "a1b2c3d4-00s2-4000-8000-0000000000s2",
+      "name": "🔬 Phase 3: LLM Analysis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1720, 100],
+      "parameters": {
+        "content": "## Phase 3: LLM Analysis (Anthropic Claude)\n\nBuilds a detailed prompt with the questionnaire content + existing Cluster Library.\nCalls Claude Sonnet 4 via HTTP Request with retries.\nParses strict JSON response and validates all required fields.\n\n**Env var required:** `ANTHROPIC_API_KEY`",
+        "width": 740,
+        "height": 160,
+        "color": 6
+      }
+    },
+    {
+      "id": "a1b2c3d4-00s3-4000-8000-0000000000s3",
+      "name": "📝 Phase 4-5: Reports & Drive",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2600, 100],
+      "parameters": {
+        "content": "## Phase 4-5: Report Rendering & Google Drive/Docs\n\nRenders two reports from the analysis JSON:\n- **Internal Report**: Full diagnostic with video talking points\n- **Coach Report**: Client-appropriate (NO hooks/scripts/calendars)\n\nCreates folder structure: `ICP Reports > {coach_id} - {coach_name}`\nCreates both Google Docs in the coach subfolder.",
+        "width": 2100,
+        "height": 160,
+        "color": 3
+      }
+    },
+    {
+      "id": "a1b2c3d4-00s4-4000-8000-0000000000s4",
+      "name": "💾 Phase 6: Update Sheets",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [5680, 100],
+      "parameters": {
+        "content": "## Phase 6: Update Sheets\n\nUpdates Coaches tab with report URLs, timestamp, and status (DONE / NEEDS_FOLLOWUP / ERROR).\nUpdates Cluster_Library tab: increments times_seen for existing clusters or appends new ones.",
+        "width": 740,
+        "height": 160,
+        "color": 2
+      }
+    },
+    {
+      "id": "a1b2c3d4-00s5-4000-8000-0000000000s5",
+      "name": "⚙️ Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, -100],
+      "parameters": {
+        "content": "## ICP Problem Cluster Report Generator — Setup\n\n1. Replace `YOUR_SPREADSHEET_ID` in all Google Sheets nodes with your actual spreadsheet ID\n2. Set `ANTHROPIC_API_KEY` in n8n Settings → Environment Variables\n3. Configure Google OAuth2 credentials for Sheets, Docs, and Drive nodes\n4. Create two tabs in your spreadsheet: `Coaches` and `Cluster_Library` with the required column headers\n5. Before each run: edit the `Set Coach ID` node with the coach_id you want to process\n6. Click **Execute Workflow** to run",
+        "width": 1600,
+        "height": 160,
+        "color": 5
+      }
+    }
+  ],
+  "connections": {
+    "Start Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Coach ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Coach ID": {
+      "main": [
+        [
+          {
+            "node": "Read Coaches Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Coaches Tab": {
+      "main": [
+        [
+          {
+            "node": "Check Coach Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Coach Found": {
+      "main": [
+        [
+          {
+            "node": "Validate Doc URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Error - Coach Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Doc URL": {
+      "main": [
+        [
+          {
+            "node": "Fetch Questionnaire Doc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Error - No Doc URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Questionnaire Doc": {
+      "main": [
+        [
+          {
+            "node": "Normalize and Redact PII",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize and Redact PII": {
+      "main": [
+        [
+          {
+            "node": "Read Cluster Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Cluster Library": {
+      "main": [
+        [
+          {
+            "node": "Build Anthropic Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Anthropic Prompt": {
+      "main": [
+        [
+          {
+            "node": "Call Anthropic API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Anthropic API": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Check LLM Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check LLM Success": {
+      "main": [
+        [
+          {
+            "node": "Render Internal Report",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Error Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Internal Report": {
+      "main": [
+        [
+          {
+            "node": "Render Coach Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Coach Report": {
+      "main": [
+        [
+          {
+            "node": "Search ICP Reports Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search ICP Reports Folder": {
+      "main": [
+        [
+          {
+            "node": "Check Root Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Root Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Prepare Root Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create ICP Reports Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Root Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Merge Root Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create ICP Reports Folder": {
+      "main": [
+        [
+          {
+            "node": "Merge Root Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Root Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Search Coach Subfolder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Coach Subfolder": {
+      "main": [
+        [
+          {
+            "node": "Check Coach Subfolder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Coach Subfolder Exists": {
+      "main": [
+        [
+          {
+            "node": "Prepare Coach Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Coach Subfolder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Coach Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Merge Coach Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Coach Subfolder": {
+      "main": [
+        [
+          {
+            "node": "Merge Coach Folder ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Coach Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Create Internal Report Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Internal Report Doc": {
+      "main": [
+        [
+          {
+            "node": "Insert Internal Report Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Internal Report Text": {
+      "main": [
+        [
+          {
+            "node": "Create Coach Report Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Coach Report Doc": {
+      "main": [
+        [
+          {
+            "node": "Insert Coach Report Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Coach Report Text": {
+      "main": [
+        [
+          {
+            "node": "Build Sheet Update Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Sheet Update Data": {
+      "main": [
+        [
+          {
+            "node": "Update Coaches Tab",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Coaches Tab": {
+      "main": [
+        [
+          {
+            "node": "Process Cluster Library Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Cluster Library Updates": {
+      "main": [
+        [
+          {
+            "node": "Update Cluster Library",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Error Status": {
+      "main": [
+        [
+          {
+            "node": "Write Error to Coaches Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "pinData": {}
+}

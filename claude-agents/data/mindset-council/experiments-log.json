@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "experiments": [],
+  "stats": {
+    "totalExperiments": 0,
+    "completed": 0,
+    "failed": 0,
+    "pending": 0,
+    "skipped": 0
+  }
+}

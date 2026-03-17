@@ -1,0 +1,150 @@
+{
+  "version": "2.1",
+  "hook_formula": "[Specific Observation] + [Soft Permission Question]",
+  "rules": [
+    "Must reference something real from their profile/content",
+    "Zero 'agency', 'scale', 'system', 'guaranteed' words",
+    "End with a question about their situation (not a pitch)"
+  ],
+  "tier_selection": {
+    "tier_a": {
+      "name": "Professional / High-Status",
+      "use_when": [
+        "Polished branding",
+        "10k+ followers",
+        "Business-focused content",
+        "Educational tone",
+        "Authority positioning"
+      ],
+      "tone": "Remove slang. Keep sentences short. No emojis."
+    },
+    "tier_b": {
+      "name": "Casual / Meme-Forward",
+      "use_when": [
+        "Casual language in posts",
+        "Gym bro energy",
+        "Meme-style content",
+        "Slang usage",
+        "Emoji-heavy"
+      ],
+      "tone": "Mirror their language. Match emoji use if any."
+    }
+  },
+  "hooks": {
+    "tier_a_professional": [
+      {
+        "id": "A1",
+        "template": "Your post on [specific topic] was sharp — is content driving most of your calls right now, or something else?",
+        "observable": "[specific topic]"
+      },
+      {
+        "id": "A2",
+        "template": "Noticed you work with [client type]. Curious — where are most of them finding you?",
+        "observable": "[client type]"
+      },
+      {
+        "id": "A3",
+        "template": "Saw your [specific program name]. How are people typically hearing about it?",
+        "observable": "[specific program name]"
+      },
+      {
+        "id": "A4",
+        "template": "Your transformations are strong. Are clients reaching out from those, or do you have another source?",
+        "observable": "transformation posts visible"
+      },
+      {
+        "id": "A5",
+        "template": "You've clearly dialed in your content. Is the call volume matching the engagement?",
+        "observable": "consistent quality content"
+      },
+      {
+        "id": "A6",
+        "template": "Noticed [specific detail from recent post]. Is that resonating with your audience?",
+        "observable": "[specific detail from recent post]"
+      },
+      {
+        "id": "A7",
+        "template": "Your bio mentions [X]. Is that your main offer right now?",
+        "observable": "[bio element]"
+      },
+      {
+        "id": "A8",
+        "template": "Saw you've been posting about [topic]. What's working best for turning that into conversations?",
+        "observable": "[topic]"
+      },
+      {
+        "id": "A9",
+        "template": "Your [Reels/carousel/post] on [topic] stood out. Is that format performing for you?",
+        "observable": "[format] + [topic]"
+      },
+      {
+        "id": "A10",
+        "template": "Noticed you serve [niche]. How's acquisition looking in that space right now?",
+        "observable": "[niche]"
+      }
+    ],
+    "tier_b_casual": [
+      {
+        "id": "B1",
+        "template": "That post on [topic] hit — you getting DMs from stuff like that?",
+        "observable": "[topic]"
+      },
+      {
+        "id": "B2",
+        "template": "Your page is solid. What's bringing in most of your clients rn?",
+        "observable": "overall page quality"
+      },
+      {
+        "id": "B3",
+        "template": "Saw your [specific content]. That's different from most. Working for you?",
+        "observable": "[specific content]"
+      },
+      {
+        "id": "B4",
+        "template": "Real talk — your content's better than 90% of coaches I see. Calls matching that?",
+        "observable": "high quality content"
+      },
+      {
+        "id": "B5",
+        "template": "Your [transformation/post] was legit. People reaching out from it?",
+        "observable": "[transformation/post]"
+      },
+      {
+        "id": "B6",
+        "template": "Just scrolled your feed. Good stuff. How's the client side looking?",
+        "observable": "feed quality"
+      },
+      {
+        "id": "B7",
+        "template": "That [specific element] in your content is fire. Getting traction?",
+        "observable": "[specific element]"
+      },
+      {
+        "id": "B8",
+        "template": "Noticed you're in [niche]. How's finding clients going in that lane?",
+        "observable": "[niche]"
+      },
+      {
+        "id": "B9",
+        "template": "Your approach to [topic] is different. Is that landing with your audience?",
+        "observable": "[topic]"
+      },
+      {
+        "id": "B10",
+        "template": "Saw your recent [post]. Curious if that style is converting for you.",
+        "observable": "[post]"
+      }
+    ]
+  },
+  "tone_calibration": {
+    "rule": "Mirror their vocabulary. If they say 'clients', you say 'clients'. If they say 'people I work with', use that.",
+    "high_status": {
+      "do": ["Keep sentences short", "Be direct", "Professional language"],
+      "dont": ["Use slang", "Use emojis", "Be overly casual"]
+    },
+    "casual": {
+      "do": ["Mirror their language", "Match emoji use", "Use their slang"],
+      "dont": ["Be stiff", "Sound corporate", "Over-formalize"]
+    }
+  }
+}

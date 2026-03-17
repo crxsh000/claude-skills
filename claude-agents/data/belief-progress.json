@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "lastSession": "",
+  "beliefs": {
+    "identified": [],
+    "transformations": [],
+    "experiments": []
+  },
+  "stats": {
+    "totalBeliefsIdentified": 0,
+    "beliefsTransformed": 0,
+    "experimentsCompleted": 0,
+    "successRate": 0
+  },
+  "sessionHistory": []
+}

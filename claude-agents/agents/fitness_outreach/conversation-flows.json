@@ -1,0 +1,275 @@
+{
+  "version": "2.1",
+  "methodology": "SPIN Selling + Sandler Up-Front Contracts + Challenger Insights",
+  "mandatory_flow": "OBSERVATION → PERMISSION → 1-LINE DIAGNOSIS → TINY WIN → QUESTION",
+  "pitch_rule": "No pitching until prospect answers at least 2 discovery questions",
+  "conversation_flow": [
+    "HOOK (observation + permission question)",
+    "DISCOVERY (2+ questions answered)",
+    "DIAGNOSIS (show the gap)",
+    "TINY WIN (one insight)",
+    "FIT CHECK (5 questions)",
+    "OFFER (with proof element)",
+    "UP-FRONT CONTRACT",
+    "CALL → CLOSE or PART FRIENDS"
+  ],
+  "stages": {
+    "1_hook": {
+      "name": "Hook",
+      "objective": "Get them curious, not sold",
+      "success_criteria": "They reply with context about their situation",
+      "guidelines": [
+        "Reference something specific from latest non-pinned post",
+        "Match their energy (Tier A or Tier B)",
+        "End with a soft permission question",
+        "Zero 'agency', 'scale', 'system', 'guaranteed' words"
+      ]
+    },
+    "2_discovery": {
+      "name": "Discovery",
+      "objective": "Understand before advising",
+      "success_criteria": "You can describe their problem better than them",
+      "guidelines": [
+        "Ask 2+ questions before any pitch",
+        "Reflect back after every 2 questions",
+        "Let them talk more than you",
+        "Identify which branching path applies"
+      ]
+    },
+    "3_diagnosis": {
+      "name": "Diagnosis",
+      "objective": "Show you see the gap",
+      "success_criteria": "'That's exactly right' or 'How'd you know?'",
+      "guidelines": [
+        "Be specific - reference actual things you saw",
+        "Be observational, not judgmental",
+        "Show the gap, don't pitch the solution yet",
+        "Let them react before continuing"
+      ]
+    },
+    "4_tiny_win": {
+      "name": "Tiny Win",
+      "objective": "Give value, no strings",
+      "success_criteria": "They engage more",
+      "guidelines": [
+        "Wait until you have 2+ facts about their situation",
+        "Make it relevant to what they told you",
+        "One insight, not a lecture",
+        "Pause and let them respond"
+      ]
+    },
+    "5_offer": {
+      "name": "Offer",
+      "objective": "Clear path, clear terms",
+      "success_criteria": "Intent + budget confirmed",
+      "guidelines": [
+        "Do fit-check questions first",
+        "Include ONE proof element (metric/case/mechanism)",
+        "State price directly when asked",
+        "Lead with proof period (10 free calls)"
+      ]
+    },
+    "6_call_transition": {
+      "name": "Call Transition",
+      "objective": "Set call expectations",
+      "success_criteria": "They know 'no' is okay",
+      "guidelines": [
+        "Use up-front contract",
+        "State time, agenda, possible outcomes",
+        "Give explicit permission to say no",
+        "Confirm they're ready"
+      ]
+    }
+  },
+  "discovery_by_stage": {
+    "beginner": {
+      "label": "Beginner Coach (Pre-$3k/mo)",
+      "questions": [
+        {"id": 1, "text": "How are you finding clients right now?", "purpose": "Situation"},
+        {"id": 2, "text": "Have you signed paying clients yet, or still building?", "purpose": "Fit check"},
+        {"id": 3, "text": "What's your offer look like — 1:1, group, something else?", "purpose": "Offer clarity"},
+        {"id": 4, "text": "What's been the hardest part of getting clients so far?", "purpose": "Problem"},
+        {"id": 5, "text": "If you had 5 qualified calls this week, could you take them?", "purpose": "Capacity"}
+      ]
+    },
+    "intermediate": {
+      "label": "Intermediate Coach ($3k–$10k/mo)",
+      "questions": [
+        {"id": 6, "text": "Where are most of your current clients coming from?", "purpose": "Situation"},
+        {"id": 7, "text": "What's your close rate on calls right now?", "purpose": "Qualification"},
+        {"id": 8, "text": "Is the bottleneck getting enough calls or closing them?", "purpose": "Problem ID"},
+        {"id": 9, "text": "How much time are you spending on finding clients vs coaching?", "purpose": "Implication"},
+        {"id": 10, "text": "What have you tried for client acquisition that didn't work?", "purpose": "Past attempts"},
+        {"id": 11, "text": "If call volume wasn't an issue, how many clients could you handle?", "purpose": "Capacity"},
+        {"id": 12, "text": "What's your timeline for wanting this solved?", "purpose": "Decision"}
+      ]
+    },
+    "advanced": {
+      "label": "Advanced Coach ($10k+/mo)",
+      "questions": [
+        {"id": 13, "text": "What does your current acquisition system look like?", "purpose": "Situation"},
+        {"id": 14, "text": "Are you looking to add another channel or replace something?", "purpose": "Intent"},
+        {"id": 15, "text": "What's your target for new clients per month?", "purpose": "Capacity"},
+        {"id": 16, "text": "What's worked best for you historically?", "purpose": "Context"},
+        {"id": 17, "text": "What would make this worth your time to explore?", "purpose": "Decision criteria"},
+        {"id": 18, "text": "Who else is involved in this decision?", "purpose": "Decision maker"},
+        {"id": 19, "text": "What's your budget range for client acquisition?", "purpose": "Budget"},
+        {"id": 20, "text": "If we delivered, what does success look like to you?", "purpose": "Expectation"}
+      ]
+    }
+  },
+  "reflect_back_prompts": [
+    "So if I'm hearing you right — [summary]. That accurate?",
+    "Sounds like the main thing is [X]. Am I getting that right?",
+    "So [situation] and that's causing [implication]. Correct?"
+  ],
+  "branching_paths": {
+    "path_a_volume": {
+      "name": "They're getting some clients, want more",
+      "focus": "Volume problem",
+      "proof_to_use": "metrics",
+      "angle": "You've got a system that works — we'd add fuel to it",
+      "signals": [
+        "Already booking some calls",
+        "Has paying clients",
+        "Wants to scale"
+      ]
+    },
+    "path_b_conversion": {
+      "name": "They're posting but nothing's converting",
+      "focus": "Conversion problem",
+      "proof_to_use": "case_study",
+      "angle": "Your content is doing the hard part — there's no capture system",
+      "signals": [
+        "Getting engagement but no calls",
+        "Posting consistently",
+        "Frustrated with results"
+      ]
+    },
+    "path_c_trust": {
+      "name": "They've tried other services and got burned",
+      "focus": "Trust problem",
+      "proof_to_use": "mechanism",
+      "angle": "I get it. What specifically didn't work?",
+      "signals": [
+        "Mentions past bad experiences",
+        "Skeptical tone",
+        "Asks about guarantees early"
+      ]
+    }
+  },
+  "mini_audit_examples": [
+    {
+      "id": "audit_1",
+      "name": "Content-to-Call Gap",
+      "script": "Your engagement is solid — comments, questions, shares. But I don't see a clear path from 'interested' to 'booked.' That gap is where people drop off."
+    },
+    {
+      "id": "audit_2",
+      "name": "CTA Mismatch",
+      "script": "Your CTA is 'DM me [keyword]' but your content attracts people who aren't ready to commit. The interested-but-not-sure crowd needs a softer entry point."
+    },
+    {
+      "id": "audit_3",
+      "name": "Profile Funnel Leak",
+      "script": "Your bio says [X], link goes to [Y]. Cold visitors see a disconnect. You're probably only converting the most motivated 10%."
+    },
+    {
+      "id": "audit_4",
+      "name": "Engagement Without Capture",
+      "script": "You respond to comments but don't initiate with people who engage. The likers-who-don't-comment — those are warm leads with no one reaching out."
+    },
+    {
+      "id": "audit_5",
+      "name": "Competitor Gap",
+      "script": "Coaches in your niche with similar engagement are booking more calls. Difference is someone's actively qualifying their engaged followers."
+    }
+  ],
+  "teach_moments": [
+    {
+      "id": "teach_1",
+      "name": "Content Myth",
+      "script": "Most coaches think the fix is more content. But I've seen mid content outperform bangers. The difference isn't the content — it's what happens after someone sees it."
+    },
+    {
+      "id": "teach_2",
+      "name": "Active vs Passive",
+      "script": "Your acquisition is passive — post and hope. Coaches who scale have active acquisition — someone initiating with interested people and qualifying them. Fishing vs hunting."
+    },
+    {
+      "id": "teach_3",
+      "name": "Qualification Gap",
+      "script": "When someone reaches out cold, you don't know if they're ready, can afford it, or are just curious. If someone qualifies first, every call is someone already sold on coaching."
+    },
+    {
+      "id": "teach_4",
+      "name": "Time Math",
+      "script": "How much time weekly on content, DMs, finding clients? [Let them answer]. That's time not coaching. Most coaches spend 60% on acquisition. What if you flipped it?"
+    },
+    {
+      "id": "teach_5",
+      "name": "Show-Up Problem",
+      "script": "No-shows happen because they booked out of curiosity. When someone confirms intent first, show-up goes from 50% to 80%+. Calls that happen close better."
+    }
+  ],
+  "upfront_contracts": {
+    "standard": {
+      "name": "Standard Version",
+      "script": "Here's what I'm thinking: 15-20 minutes. I'll ask about your current setup, show you how this would work for you, and you can ask whatever.\n\nAt the end, one of three things: it makes sense and we move forward, it doesn't and we part as friends, or you need more info and we figure that out.\n\nFair?"
+    },
+    "skeptical": {
+      "name": "Skeptical Lead Version",
+      "script": "Let's keep it simple: 15 minutes. I'll ask about your situation, you ask about mine. If there's no fit, I'll tell you — and you should tell me too. No pressure.\n\nSound fair?"
+    },
+    "busy": {
+      "name": "Busy Lead Version",
+      "script": "I know you're busy: 15 minutes max. Quick questions, quick answers, we'll both know by the end if it makes sense. If not, we end early.\n\nCool?"
+    }
+  },
+  "no_is_okay_phrases": [
+    "If it's not a fit, that's fine — we'll both know.",
+    "This isn't a convince-you call. It's a figure-out-fit call.",
+    "If you get on and it's not for you, just say so. No hard feelings."
+  ],
+  "follow_ups": {
+    "fu1_48h": {
+      "name": "FU1 (48 hours)",
+      "purpose": "Value + A/B question",
+      "templates": [
+        "One thing I noticed on your profile — [specific observation]. Does that match what you're seeing, or is it something else?",
+        "Thought about what you mentioned. [One insight]. Is that landing, or is your situation different?"
+      ]
+    },
+    "fu2_5d": {
+      "name": "FU2 (5 days after FU1)",
+      "purpose": "Case study + relevance check",
+      "templates": [
+        "Worked with a [similar niche] coach recently — [brief result]. Not sure if that's relevant for you. Still thinking about this, or did you go a different direction?"
+      ]
+    },
+    "fu3_10d": {
+      "name": "FU3 (10 days after FU2)",
+      "purpose": "Clean exit",
+      "templates": [
+        "I'll let you be — you know your situation best. If the client thing becomes a priority, I'm around. Good luck with [something specific about their work]."
+      ]
+    }
+  },
+  "follow_up_rules": [
+    "Every follow-up adds value or asks a genuine question",
+    "No 'just checking in' — that's lazy",
+    "A/B questions give easy reply options",
+    "Exit clean after 3 touches",
+    "After FU3, stop. No exceptions.",
+    "No guilt language ('guess you're not interested')",
+    "If they reply at any point, restart fresh"
+  ],
+  "fit_check_questions": [
+    "Are you actively signing new clients right now?",
+    "If I booked 10 qualified calls this month, could you take them?",
+    "What's your current close rate on sales calls?",
+    "What do you charge for your main offer?",
+    "Who makes the decision to move forward — just you?"
+  ],
+  "fit_check_exit": "Sounds like timing might be off. Happy to reconnect in [X weeks] if things shift."
+}

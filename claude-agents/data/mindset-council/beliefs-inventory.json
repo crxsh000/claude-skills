@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "beliefs": [],
+  "stats": {
+    "totalIdentified": 0,
+    "activeBeliefs": 0,
+    "transformedBeliefs": 0,
+    "dormantBeliefs": 0
+  }
+}

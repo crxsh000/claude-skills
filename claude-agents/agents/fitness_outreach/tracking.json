@@ -1,0 +1,165 @@
+{
+  "version": "2.1",
+  "methodology": "SPIN Selling + Sandler Up-Front Contracts + Challenger Insights",
+  "current_metrics": {
+    "reply_rate": "5%",
+    "reply_to_call": "0%",
+    "problem": "Hooks work, discovery/conversion broken"
+  },
+  "success_metrics": {
+    "hook_to_reply": ">5%",
+    "reply_to_discovery_complete": ">60%",
+    "discovery_to_call_booked": ">30%",
+    "booked_to_showed": ">70%",
+    "showed_to_closed": ">30%"
+  },
+  "logging_template": {
+    "fields": [
+      {"name": "hook_id", "description": "Which hook was used"},
+      {"name": "sent", "description": "Number sent"},
+      {"name": "replies", "description": "Number of replies"},
+      {"name": "reply_percent", "description": "Replies / Sent"},
+      {"name": "calls_booked", "description": "From this hook"},
+      {"name": "book_percent", "description": "Booked / Replies"},
+      {"name": "shows", "description": "Showed up"},
+      {"name": "show_percent", "description": "Shows / Booked"},
+      {"name": "closes", "description": "Closed deals"},
+      {"name": "close_percent", "description": "Closes / Shows"},
+      {"name": "notes", "description": "What's working/not"}
+    ]
+  },
+  "weekly_review_process": [
+    "Export data every Sunday",
+    "Rank hooks by reply %",
+    "Kill bottom 20% — stop using",
+    "Remix top 20% — create variations",
+    "Add 2-3 new hooks to test",
+    "Reset tracking for new week"
+  ],
+  "ab_test_rules": [
+    "Minimum 50 sends before judging a hook",
+    "Compare like-to-like (same niche, same time of day)",
+    "One variable at a time (hook style OR timing, not both)",
+    "Document why something worked or didn't"
+  ],
+  "quality_scorecard": {
+    "description": "Score 0-2 for each category. Must score 12/16 to pass.",
+    "passing_score": 12,
+    "max_score": 16,
+    "categories": [
+      {
+        "id": 1,
+        "name": "Personalization",
+        "description": "Referenced specific detail from their profile",
+        "scores": {
+          "0": "Generic message, no personalization",
+          "1": "Mentioned their niche or content type",
+          "2": "Referenced specific post, program, or observable detail"
+        }
+      },
+      {
+        "id": 2,
+        "name": "Tone Match",
+        "description": "Mirrored their communication style",
+        "scores": {
+          "0": "Mismatched tone (casual to formal or vice versa)",
+          "1": "Neutral tone, neither matching nor clashing",
+          "2": "Perfectly mirrored their vocabulary and style"
+        }
+      },
+      {
+        "id": 3,
+        "name": "Discovery Depth",
+        "description": "Asked 2+ questions before any pitch",
+        "scores": {
+          "0": "Pitched immediately or after 0-1 questions",
+          "1": "Asked 1-2 questions before pitching",
+          "2": "Full discovery (2+ questions), reflected back, then pitched"
+        }
+      },
+      {
+        "id": 4,
+        "name": "Proof Included",
+        "description": "Pitch had metric/case/mechanism proof",
+        "scores": {
+          "0": "No proof element in pitch",
+          "1": "Vague or generic proof",
+          "2": "Specific, relevant proof matched to their situation"
+        }
+      },
+      {
+        "id": 5,
+        "name": "Price Clarity",
+        "description": "Answered price directly when asked",
+        "scores": {
+          "0": "Dodged or avoided price question",
+          "1": "Gave vague answer or range",
+          "2": "Stated $3,500/month directly with context"
+        }
+      },
+      {
+        "id": 6,
+        "name": "Clear Next Step",
+        "description": "Always obvious what's next",
+        "scores": {
+          "0": "Conversation ended without direction",
+          "1": "Vague next step suggested",
+          "2": "Specific, clear CTA appropriate for stage"
+        }
+      },
+      {
+        "id": 7,
+        "name": "No Is Okay",
+        "description": "Gave explicit permission to decline",
+        "scores": {
+          "0": "Pushy or assumptive close",
+          "1": "Neutral close without pressure",
+          "2": "Explicitly said 'no is okay' or equivalent"
+        }
+      },
+      {
+        "id": 8,
+        "name": "Clean Exit",
+        "description": "Exited gracefully if not a fit",
+        "scores": {
+          "0": "Kept pushing after clear no / used guilt",
+          "1": "Stopped but no graceful close",
+          "2": "Clean, professional exit that left door open"
+        }
+      }
+    ]
+  },
+  "integrity_rules": {
+    "pacing": {
+      "new_dms_per_account_per_day": "20-30 max",
+      "accounts_per_operator": "8 max",
+      "warmup_period": "7 days (5 DMs/day, increase gradually)",
+      "time_between_dms": "2-5 minutes minimum"
+    },
+    "followup_limits": {
+      "max_followups": 3,
+      "min_time_between": "48 hours",
+      "after_fu3": "Mark as 'closed - no response' and stop"
+    },
+    "stop_immediately": [
+      "They say 'stop', 'not interested', 'don't contact me'",
+      "They block or report",
+      "They've said no twice in any form",
+      "They're clearly annoyed (short replies, 'k', 'ok', ignoring questions)"
+    ],
+    "never_do": [
+      "Mass DM identical messages",
+      "Use automation that sends while you're 'offline'",
+      "Follow-unfollow tactics",
+      "Fake engagement before DMing",
+      "Lie about mutual connections or past interactions"
+    ]
+  },
+  "volume_targets": {
+    "dms_per_day": "100-200",
+    "accounts": 8,
+    "goal": "3-5 demo clients to prove system"
+  },
+  "campaigns": [],
+  "prospects": []
+}

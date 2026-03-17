@@ -1,0 +1,57 @@
+{
+  "version": "2.1",
+  "format": "Acknowledge → Clarify → Reframe → CTA",
+  "response_types": ["short", "medium", "voice_note"],
+  "objections": {
+    "how_much": {
+      "trigger_phrases": ["how much", "what's it cost", "pricing", "price", "what do you charge"],
+      "short": "Depends on what you need. Quick question — are you actively taking clients right now?",
+      "medium": "Fair question. It's $3,500/mo after a free trial. But before we talk numbers — are you looking to bring on more clients right now, or is this more research?",
+      "voice_note": "Hey — got your question about price. So it's $3,500 a month, but here's the thing — I don't ask for that until you've seen the work. First 10 calls are free. If I deliver, we talk pricing. If I don't, you owe nothing. But real quick — are you actually looking to take on more clients right now? That'll help me know if this even makes sense for you."
+    },
+    "send_info": {
+      "trigger_phrases": ["send info", "send me info", "more info", "send details", "can you send"],
+      "short": "Happy to — what specifically would be most useful? The process, results, or pricing?",
+      "medium": "For sure. Quick question so I send the right thing — is this a priority right now, or more something you're exploring for later?",
+      "voice_note": "Hey — happy to send info. But honestly, most info docs just get skimmed. What would actually help you decide? Is it how I find people, what qualified looks like, or the pricing? Let me know and I'll put together something relevant instead of a generic deck."
+    },
+    "already_have_agency": {
+      "trigger_phrases": ["already have", "have an agency", "have someone", "working with someone", "got a guy"],
+      "short": "Got it. How's that going for you — happy with the lead quality?",
+      "medium": "Makes sense. Just curious — are you happy with what you're getting, or is there a gap you're trying to fill?",
+      "voice_note": "Hey — totally get it, you've got someone. Quick question though — are you happy with the quality of calls they're booking? I ask because a lot of coaches I talk to have someone, but the leads aren't qualified — tire-kickers, no-shows, that kind of thing. If that's not you, all good. But if it is, might be worth a quick chat to compare approaches."
+    },
+    "no_time": {
+      "trigger_phrases": ["no time", "don't have time", "too busy", "slammed", "crazy busy"],
+      "short": "Makes sense. Is that temporary or is acquisition not a focus right now?",
+      "medium": "Totally fair — capacity is real. Is this a 'not right now' or a 'not this quarter' kind of thing?",
+      "voice_note": "Hey — I hear you on time. Real question: is it that you're slammed right now but want more clients eventually? Or is acquisition genuinely not a priority? If it's timing, happy to circle back in a few weeks. If it's not a fit, no worries — just want to respect your time either way."
+    },
+    "not_taking_clients": {
+      "trigger_phrases": ["not taking clients", "full right now", "not accepting", "maxed out", "at capacity"],
+      "short": "Got it. Is that permanent or just for now?",
+      "medium": "Makes sense. When do you think you'll be open to new clients again? Happy to check back then.",
+      "voice_note": "Hey — no problem at all. Quick question: is that a permanent thing, or more of a 'full right now' situation? If you're planning to open up spots later, I can check back when timing's better. Just let me know."
+    },
+    "hate_sales_calls": {
+      "trigger_phrases": ["hate sales calls", "don't like calls", "hate calls", "no calls", "don't do calls"],
+      "short": "What specifically about them? The awkwardness, the time, or something else?",
+      "medium": "I hear that a lot. Is it the calls themselves, or that the people on them aren't serious? Because qualified calls feel different.",
+      "voice_note": "Hey — I get it, sales calls can feel weird. But here's the thing: most bad calls are because the person wasn't qualified. They're curious, not committed. When someone's already said they want coaching, can afford it, and are ready to start — the call isn't a pitch. It's just 'here's how I work, does that fit?' Way different energy. Would it help to hear what a qualified call actually looks like?"
+    },
+    "tried_this": {
+      "trigger_phrases": ["tried this", "tried before", "been burned", "didn't work", "bad experience"],
+      "short": "What happened? Lead quality, no-shows, or something else?",
+      "medium": "That's frustrating. What specifically didn't work — the leads themselves, or the process?",
+      "voice_note": "Hey — I hear you. A lot of coaches have been burned by this stuff. What went wrong — were the leads unqualified, no-shows, or just not converting? The reason I ask: most lead gen is just volume. I do qualification first. If someone's not ready to buy, they don't get to you. That's usually the difference. Would it help if I walked you through what my qualification looks like compared to what you had before?"
+    }
+  },
+  "handling_rules": [
+    "Always acknowledge first — never jump straight to reframe",
+    "Use clarify to understand the REAL objection",
+    "Tailor your reframe to their specific answer",
+    "Don't be defensive — stay curious",
+    "End with a soft CTA, not a hard push",
+    "If they're not a fit, let them go gracefully"
+  ]
+}
